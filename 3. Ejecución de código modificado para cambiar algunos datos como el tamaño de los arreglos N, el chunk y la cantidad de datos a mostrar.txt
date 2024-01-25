@@ -1,0 +1,71 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <omp.h>
+
+// Función para imprimir los primeros 'mostrar' elementos de un arreglo
+void imprimeArreglo(float *d, int mostrar);
+
+int main()
+{
+    // Inicializar semilla para valores aleatorios
+    std::srand(std::time(0));
+
+    // Configuración de parámetros
+    const int ejecuciones = 5;
+
+    // Realizar varias ejecuciones con diferentes configuraciones
+    for (int ejecucion = 1; ejecucion <= ejecuciones; ++ejecucion)
+    {
+        int N = 1000 * ejecucion;        // Tamaño del arreglo
+        int chunk = 100 * ejecucion;     // Tamaño del chunk
+        int mostrar = 10 * ejecucion;    // Cantidad de datos a mostrar
+
+        // Mostrar la configuración actual
+        std::cout << "Ejecución " << ejecucion << " - Configuración: N=" << N << ", chunk=" << chunk << ", mostrar=" << mostrar << "\n";
+
+        // Declarar arreglos a, b, y c
+        float a[N], b[N], c[N];
+
+        // Inicializar arreglos con valores aleatorios entre 0 y 99
+        for (int i = 0; i < N; i++)
+        {
+            a[i] = std::rand() % 100; // Genera un número aleatorio entre 0 y 99
+            b[i] = std::rand() % 100;
+        }
+
+        // Inicio de la región paralela utilizando OpenMP
+        #pragma omp parallel for \
+            shared(a, b, c, N, chunk, mostrar) \
+            schedule(static, chunk)
+
+        // Bucle paralelo: suma de elementos de a y b en c
+        for (int i = 0; i < N; i++)
+        {
+            // Realizar cálculos dentro del bloque paralelo
+            c[i] = a[i] + b[i];
+        }
+
+        // Fin de la región paralela
+
+        // Imprimir los primeros 'mostrar' elementos de los arreglos a, b, y c
+        std::cout << "Imprimiendo los primeros " << mostrar << " valores del arreglo a:" << std::endl;
+        imprimeArreglo(a, mostrar);
+        std::cout << "Imprimiendo los primeros " << mostrar << " valores del arreglo b:" << std::endl;
+        imprimeArreglo(b, mostrar);
+        std::cout << "Imprimiendo los primeros " << mostrar << " valores del arreglo c:" << std::endl;
+        imprimeArreglo(c, mostrar);
+
+        std::cout << "\n"; // Separador entre ejecuciones
+    }
+
+    return 0;
+}
+
+// Implementación de la función para imprimir un arreglo
+void imprimeArreglo(float *d, int mostrar)
+{
+    for (int x = 0; x < mostrar; x++)
+        std::cout << d[x] << " - ";
+    std::cout << std::endl;
+}
